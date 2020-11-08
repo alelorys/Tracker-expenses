@@ -6,6 +6,7 @@ Created on Mon Nov  2 18:29:34 2020
 """
 
 from tkinter import *
+from datetime import datetime
 
 win = Tk()
 
@@ -24,7 +25,13 @@ class Window:
         self.prize = Entry(master)
         self.prize.pack()
         self.prize.place(x=90, y=50)
-
+        self.currentDate = datetime.now()
+        self.dateCur = self.currentDate.month,".",self.currentDate.year
+        self.dateTxt = Text(master)
+        self.dateTxt.pack()
+        self.dateTxt.place(x=510, y=10, height=20, width=80)
+        self.dateTxt.delete(1.0, "end")
+        self.dateTxt.insert(1.0, self.dateCur)
         self.totalLbl = Label(master, text="Saldo:")
         self.totalLbl.pack()
         self.totalLbl.place(x=20,y=140)
@@ -39,18 +46,30 @@ class Window:
         self.cashoutBtn.pack()
         self.cashoutBtn.place(x=80, y=75)
 
+
+
+        self.historyLbl = Label(master, text="Historia:")
+        self.historyLbl.pack()
+        self.historyLbl.place(x=20,y=180)
+        self.historyPay = Text(master)
+        self.historyPay.pack()
+        self.historyPay.place(x=20,y=200, height=200, width=500)
+
+
     def payment(self):
         self.paymentVar = float(self.prize.get())
         self.total = self.total + self.paymentVar
         #t.insert(tk.END, "Coś tu\npiszę\nSobie")
         self.totalTxt.delete(1.0,"end")
         self.totalTxt.insert(1.0, self.total)
+        self.historyPay.insert(END, "Wpłata "+ str(self.paymentVar)+"\n")
 
     def cashout(self):
         self.cashoutVar = float(self.prize.get())
         self.total = self.total - self.cashoutVar
         self.totalTxt.delete(1.0,"end")
         self.totalTxt.insert(1.0, self.total)
+        self.historyPay.insert(END, "Wypłata "+str(self.cashoutVar)+"\n")
 
 mainWindow = Window(win)       
 win.mainloop()
