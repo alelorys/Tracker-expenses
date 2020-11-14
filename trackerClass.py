@@ -19,12 +19,20 @@ class Window:
         myFrame = Frame(master)
         myFrame.pack()
         self.total = 0
-        self.tracker = Label(master, text="Podaj kwotę")
+        self.history = {}
+        self.tracker = Label(master, text="Podaj nazwę:")
         self.tracker.pack()
-        self.tracker.place(x=20, y=50)
-        self.prize = Entry(master)
-        self.prize.pack()
-        self.prize.place(x=90, y=50)
+        self.tracker.place(x=20, y=20)
+        self.nameEntry = Entry(master)
+        self.nameEntry.pack()
+        self.nameEntry.place(x=100, y=20)
+        self.prizeLbl = Label(master, text="Podaj kwotę:")
+        self.prizeLbl.pack()
+        self.prizeLbl.place(x=20,y=50)
+        self.prizeEntry = Entry(master)
+        self.prizeEntry.pack()
+        self.prizeEntry.place(x=100, y=50)
+
         self.currentDate = datetime.now()
         self.dateCur = self.currentDate.month,".",self.currentDate.year
         self.dateTxt = Text(master)
@@ -36,6 +44,7 @@ class Window:
         self.totalLbl.pack()
         self.totalLbl.place(x=20,y=140)
 
+
         self.totalTxt = Text(master)
         self.totalTxt.pack()
         self.totalTxt.place(x=60, y=140, height=20, width=100)
@@ -45,9 +54,6 @@ class Window:
         self.cashoutBtn = Button(master, text="Wypłata", command=self.cashout)
         self.cashoutBtn.pack()
         self.cashoutBtn.place(x=80, y=75)
-
-
-
         self.historyLbl = Label(master, text="Historia:")
         self.historyLbl.pack()
         self.historyLbl.place(x=20,y=180)
@@ -57,19 +63,34 @@ class Window:
 
 
     def payment(self):
-        self.paymentVar = float(self.prize.get())
-        self.total = self.total + self.paymentVar
-        #t.insert(tk.END, "Coś tu\npiszę\nSobie")
+        cashInName = self.nameEntry.get()
+        cashInPrize = float(self.prizeEntry.get())
+        self.total = self.total+cashInPrize
+        self.history[cashInName] = cashInPrize
         self.totalTxt.delete(1.0,"end")
-        self.totalTxt.insert(1.0, self.total)
-        self.historyPay.insert(END, "Wpłata "+ str(self.paymentVar)+"\n")
+        self.totalTxt.insert(1.0,self.total)
+        # self.historyPay.delete(1.0, "end")
+        # for i in self.history:
+        #   self.historyPay.insert(1.0, "Wypłata "+str(i)+"\n")
+        self.historyPay.delete(1.0, "end")
+
+        for key, value in self.history.items():
+            string = key + " : "+str(value)+"\n"
+            self.historyPay.insert(1.0, string)
 
     def cashout(self):
-        self.cashoutVar = float(self.prize.get())
-        self.total = self.total - self.cashoutVar
+        cashOutName = self.nameEntry.get()
+        cashOutPrize = float(self.prizeEntry.get())
+        self.history[cashOutName] = cashOutPrize
+        self.total = self.total - cashOutPrize
         self.totalTxt.delete(1.0,"end")
         self.totalTxt.insert(1.0, self.total)
-        self.historyPay.insert(END, "Wypłata "+str(self.cashoutVar)+"\n")
+        self.historyPay.delete(1.0, "end")
+        for key, value in self.history.items():
+            cashout = key + " : " + str(value) + "\n"
+            self.historyPay.insert(1.0, cashout)
+
+
 
 mainWindow = Window(win)       
 win.mainloop()
