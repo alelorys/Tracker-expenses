@@ -2,12 +2,13 @@
 """
 Created on Mon Nov  2 18:29:34 2020
 
-@author: Ola
+@author: Ola WIP
 """
 
 from tkinter import *
 from datetime import datetime
 import pickle
+import os.path
 win = Tk()
 
 win.title("Tracker wydatków")
@@ -49,6 +50,12 @@ class Window:
         self.totalTxt = Text(master)
         self.totalTxt.pack()
         self.totalTxt.place(x=60, y=140, height=20, width=100)
+        self.totalTxt.delete(1.0,"end")
+        self.totalTxt.insert(1.0,"0.00")
+        if os.path.exists("total.dat")==True:
+            self.total = pickle.load(open("total.dat","rb"))
+            self.totalTxt.delete(1.0,"end")
+            self.totalTxt.insert(1.0, self.total)
         self.paymentBtn = Button(master, text="Wpłata", command=self.payment)
         self.paymentBtn.pack()
         self.paymentBtn.place(x=20, y=75)
@@ -58,20 +65,24 @@ class Window:
         self.historyLbl = Label(master, text="Historia:")
         self.historyLbl.pack()
         self.historyLbl.place(x=20,y=180)
-        self.history = pickle.load(open("payment.dat", "rb"))
+
         self.historyPay = Text(master)
         self.historyPay.pack()
         self.historyPay.place(x=20,y=200, height=200, width=500)
         self.historyPay.delete(1.0,"end")
-        for key, value in self.history.items():
-                string = key + " : "+str(value)+"\n"
+        if os.path.exists("payment.dat")==True:
+            self.history = pickle.load(open("payment.dat", "rb"))
+            for key, value in self.history.items():
+                string = key + " : " + str(value) + "\n"
                 self.historyPay.insert(1.0, string)
 
     def payment(self):
+
         cashInName = self.nameEntry.get()
         cashInPrize = float(self.prizeEntry.get())
         self.total = self.total+cashInPrize
         self.history[cashInName] = cashInPrize
+        pickle.dump(self.total,open("total.dat","wb"))
         pickle.dump(self.history,open("payment.dat","wb"))
         self.totalTxt.delete(1.0,"end")
         self.totalTxt.insert(1.0,self.total)
@@ -85,9 +96,11 @@ class Window:
             self.historyPay.insert(1.0, string)
 
     def cashout(self):
+
         cashOutName = self.nameEntry.get()
         cashOutPrize = float(self.prizeEntry.get())
         self.history[cashOutName] = cashOutPrize
+        pickle.dump(self.total,open("total.dat","wb"))
         pickle.dump(self.history,open("payment.dat","wb"))
         self.total = self.total - cashOutPrize
         self.totalTxt.delete(1.0,"end")
@@ -96,6 +109,7 @@ class Window:
         for key, value in self.history.items():
             cashout = key + " : " + str(value) + "\n"
             self.historyPay.insert(1.0, cashout)
+
 
 
 
