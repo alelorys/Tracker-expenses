@@ -20,7 +20,7 @@ class Window:
         myFrame = Frame(master)
         myFrame.pack()
         self.total = 0
-        self.history = {}
+        self.history = []
 
         self.tracker = Label(master, text="Podaj nazwę:")
         self.tracker.pack()
@@ -72,16 +72,16 @@ class Window:
         self.historyPay.delete(1.0,"end")
         if os.path.exists("payment.dat")==True:
             self.history = pickle.load(open("payment.dat", "rb"))
-            for key, value in self.history.items():
-                string = key + " : " + str(value) + "\n"
-                self.historyPay.insert(1.0, string)
+            for i in self.history:
+                for v in i.values():
+                    self.historyPay.insert(1.0, v)
 
     def payment(self):
 
         cashInName = self.nameEntry.get()
         cashInPrize = float(self.prizeEntry.get())
         self.total = self.total+cashInPrize
-        self.history[cashInName] = cashInPrize
+        self.history.append({"Nazwa":cashInName,"Kwota":cashInPrize})
         pickle.dump(self.total,open("total.dat","wb"))
         pickle.dump(self.history,open("payment.dat","wb"))
         self.totalTxt.delete(1.0,"end")
@@ -90,25 +90,24 @@ class Window:
         # for i in self.history:
         #   self.historyPay.insert(1.0, "Wypłata "+str(i)+"\n")
         self.historyPay.delete(1.0, "end")
-
-        for key, value in self.history.items():
-            string = key + " : "+str(value)+"\n"
-            self.historyPay.insert(1.0, string)
-
+        
+        for i in self.history:
+                for v in i.values():
+                    self.historyPay.insert(1.0, v)
     def cashout(self):
 
         cashOutName = self.nameEntry.get()
         cashOutPrize = float(self.prizeEntry.get())
-        self.history[cashOutName] = cashOutPrize
+        self.history.append({"Nazwa":cashOutName,"Kwota":cashOutPrize})
         pickle.dump(self.total,open("total.dat","wb"))
         pickle.dump(self.history,open("payment.dat","wb"))
         self.total = self.total - cashOutPrize
         self.totalTxt.delete(1.0,"end")
         self.totalTxt.insert(1.0, self.total)
         self.historyPay.delete(1.0, "end")
-        for key, value in self.history.items():
-            cashout = key + " : " + str(value) + "\n"
-            self.historyPay.insert(1.0, cashout)
+        for i in self.history:
+                for v in i.values():
+                    self.historyPay.insert(1.0, v)
 
 
 
