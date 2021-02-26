@@ -73,32 +73,31 @@ class Window:
         if os.path.exists("payment.dat")==True:
             self.history = pickle.load(open("payment.dat", "rb"))
             for i in self.history:
-                for v in i.values():
-                    self.historyPay.insert(1.0, v)
-
+                self.historyPay.insert(1.0, i)
+        print(self.history)
     def payment(self):
 
         cashInName = self.nameEntry.get()
         cashInPrize = float(self.prizeEntry.get())
         self.total = self.total+cashInPrize
-        self.history.append({"Nazwa":cashInName,"Kwota":cashInPrize})
+        cash = cashInName + ": "+ str(cashInPrize)+"\n"
+        self.history.append(cash)
         pickle.dump(self.total,open("total.dat","wb"))
         pickle.dump(self.history,open("payment.dat","wb"))
         self.totalTxt.delete(1.0,"end")
         self.totalTxt.insert(1.0,self.total)
-        # self.historyPay.delete(1.0, "end")
-        # for i in self.history:
-        #   self.historyPay.insert(1.0, "Wypłata "+str(i)+"\n")
-        self.historyPay.delete(1.0, "end")
         
+        self.historyPay.delete(1.0, "end")
         for i in self.history:
-                for v in i.values():
-                    self.historyPay.insert(1.0, v)
+            self.historyPay.insert(1.0, i)
+        print(self.history)
+        
     def cashout(self):
 
         cashOutName = self.nameEntry.get()
         cashOutPrize = float(self.prizeEntry.get())
-        self.history.append({"Nazwa":cashOutName,"Kwota":cashOutPrize})
+        cash = cashOutName + ": " + str(cashOutPrize)+"\n"
+        self.history.append(cash)
         pickle.dump(self.total,open("total.dat","wb"))
         pickle.dump(self.history,open("payment.dat","wb"))
         self.total = self.total - cashOutPrize
@@ -106,8 +105,7 @@ class Window:
         self.totalTxt.insert(1.0, self.total)
         self.historyPay.delete(1.0, "end")
         for i in self.history:
-                for v in i.values():
-                    self.historyPay.insert(1.0, v)
+            self.historyPay.insert(1.0, i)
 
 
 
