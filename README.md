@@ -1,1 +1,1 @@
-# Tracker-wydatk-w
+Expenses tracker
