@@ -2,7 +2,12 @@ import tkinter as tk
 from tkinter import *
 from datetime import datetime
 import os
-import pickle
+import csv
+
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+
 app = Tk()
 app.title("Śledzenie wydatków")
 app.geometry("600x450")
@@ -75,15 +80,23 @@ class StartPage(tk.Frame):
         self.totalTxt.pack()
         self.totalTxt.place(x=60, y=140, height=20, width=100)
         self.totalTxt.config(bg="#fcddec", highlightthickness = 0, borderwidth=0)
-        self.totalTxt.delete(1.0,"end")
         self.totalTxt.insert(1.0,self.total)
-
-        today = datetime.now().date()
+        
+        #print(self.predict_total())
+        self.predictTotalTxt = tk.Text(self)
+        self.predictTotalTxt.pack()
+        self.predictTotalTxt.place(x=180, y=140, height=20, width=100)
+        self.predictTotalTxt.config(bg="#fcddec", highlightthickness = 0, borderwidth=0)
+        
+        
+        
+        
+        self.today = datetime.now().date()
         dateTxt = Label(self, font='Helvetica 10 bold')
         dateTxt.pack()
         dateTxt.place(x=500, y=10)
         #dateTxt.insert(1.0, dateCur)
-        dateTxt.config(bg="#a5a6f6", text= today)
+        dateTxt.config(bg="#a5a6f6", text= self.today)
 
         totalLbl = Label(self, text="Saldo:")
         totalLbl.pack()
@@ -91,17 +104,11 @@ class StartPage(tk.Frame):
         totalLbl.config(bg="#a5a6f6")
 
         summary_month = []
-        if os.path.exists("total.dat")==True:
-            self.total = pickle.load(open("total.dat","rb"))
-            self.totalTxt.delete(1.0,"end")
-            self.totalTxt.insert(1.0, self.total)
+        
+        
             
-        if today.day == 1 or os.path.exists("summaryMonth.dat") == False:
-            summary_month.append((str(today)[0:10]+":",self.total))
-            pickle.dump(summary_month,open("summaryMonth.dat","wb"))
-        
-        
-        
+            
+            
         paymentBtn = tk.Button(self, text="Wpłata", command= self.payment)
         paymentBtn.pack()
         paymentBtn.place(x=60, y=95)
@@ -121,71 +128,169 @@ class StartPage(tk.Frame):
         self.historyPay.pack()
         self.historyPay.place(x=20,y=200, height=200, width=500)
         self.historyPay.config(bg="#fcddec", highlightthickness = 0, borderwidth=0)
-        self.historyPay.delete(1.0,"end")
+        self.historyPay.delete(1.0, "end")
 
-        if os.path.exists("payment.dat")==True:
-            self.history = pickle.load(open("payment.dat", "rb"))
-            for i in self.history:
-                self.historyPay.insert(1.0, i)
+        
+
+        if os.path.exists("payment.csv")==True:
+            with open('payment.csv', newline='', encoding='utf-8') as csvfile:
+                payment = csv.reader(csvfile, delimiter=' ', quotechar='|')
                 
+                for row in payment:
+
+                    i = row[0] + ": " + row[1] + " " + row[2]
+                    self.history.append(i)
+                    self.historyPay.insert(1.0, i + "\n")
+                    self.total += float(row[1])
+                    self.totalTxt.delete(1.0,"end")
+                    self.totalTxt.insert(1.0, self.total)            
+
+        
+        if self.today.day == 3:
+            self.predict = self.predict_total()
+            self.predictTotalTxt.delete(1.0, 'end')
+            self.predictTotalTxt.insert(1.0, self.predict)
+            
+            with open('saves.csv', 'a', newline='', encoding='utf-8') as csvfile:
+                saves = csv.writer(csvfile, delimiter=' ', quotechar='|',
+                quoting=csv.QUOTE_MINIMAL)
+                saves.writerow([self.total])
+                
+            self.total = 0.00
+            self.totalTxt.delete(1.0, 'end')
+            self.totalTxt.insert(1.0, self.total)
+            
         summaryBtn = tk.Button(self, text="Podsumowanie",
                                command = lambda:controller.show_frame(Summary))        
         summaryBtn.pack()
         summaryBtn.place(x = 20, y = 415)
-        
+        summaryBtn.config(bg="#fcddec", highlightthickness = 0, borderwidth=0)
+
         piggybankBtn = tk.Button(self,text="Skarbonka",
                                  command = lambda: controller.show_frame(Piggy))
         
         piggybankBtn.pack()
         piggybankBtn.place(x = 120, y= 415)
-        
+        piggybankBtn.config(bg="#fcddec", highlightthickness = 0, borderwidth=0)
+
     def payment(self):
-        cashName = self.nameEntry.get()
-        cashInPrize = float(self.prizeEntry.get())
-        self.total = self.total+cashInPrize
-        cash = cashName + ": "+ str(cashInPrize)
-        self.history.append(cash + " zł\n")
-        pickle.dump(round(self.total,2),open("total.dat","wb"))
-        pickle.dump(self.history,open("payment.dat","wb"))
+        name = self.nameEntry.get()
+        amount = float(self.prizeEntry.get())
+        date = self.today
+        cash = name + ": "+ str(amount)+' '+str(date)
+        self.total = self.total + amount
         self.totalTxt.delete(1.0,"end")
         self.totalTxt.insert(1.0, self.total)
+        self.history.append(cash)
+        
+        with open('payment.csv', 'a', newline='', encoding='utf-8') as csvfile:
+            payment = csv.writer(csvfile, delimiter=' ', quotechar='|',
+            quoting=csv.QUOTE_MINIMAL)
+            payment.writerow([name, amount, date])
+            
+
+            csvfile.close()
         
         self.historyPay.delete(1.0, "end")
         for i in self.history:
-            self.historyPay.insert(1.0, i)
+            self.historyPay.insert(1.0, i + "\n")
     
     def cashOut(self):
-        cashName = self.nameEntry.get()
-        cashOutPrize = float(self.prizeEntry.get())
-        self.total = self.total-cashOutPrize
-        cash = cashName + ": "+ str(cashOutPrize)
-        self.history.append(cash + " zł\n")
-        pickle.dump(round(self.total,2),open("total.dat","wb"))
-        pickle.dump(self.history,open("payment.dat","wb"))
+        name = self.nameEntry.get()
+        amount = float(self.prizeEntry.get())
+        date = self.today
+        self.total = self.total + (-amount)
         self.totalTxt.delete(1.0,"end")
-        self.totalTxt.insert(1.0,str(self.total,"zł"))
+        self.totalTxt.insert(1.0, self.total)
+        cash = name + ": "+ str(-amount) + ' ' + str(date)
+
+        self.history.append(cash)
+        with open('payment.csv', 'a', newline='', encoding='utf-8') as csvfile:
+            payment = csv.writer(csvfile, delimiter=' ', quotechar='|',
+            quoting=csv.QUOTE_MINIMAL)
+            payment.writerow([name, (-amount), date])
+
+            csvfile.close()
         
         self.historyPay.delete(1.0, "end")
         for i in self.history:
-            self.historyPay.insert(1.0, i)
+            self.historyPay.insert(1.0, i + "\n")
+            
+    def predict_total(self):
+        df = pd.read_csv('summary.csv')
+        
+        date = np.array(df['date'],
+                dtype='datetime64[ns]')
+
+        amount = np.array(df['amount'])
+        df = pd.DataFrame({'date': date, 'amount': amount})
+        
+        
+        df['date'] = pd.to_datetime(df['date'])
+        df['date'] = df['date'].map(datetime.toordinal)
+        
+        
+        reg = LinearRegression()
+        reg.fit(df[['date']], df.amount)
+        #np.asarray(['2022-01-10'])
+        next_month = pd.to_datetime(['2022-01-10'])
+        next_month = next_month.map(datetime.toordinal)
+        
+        #next_month = 
+        
+        #print(next_month_pd)
+        saldoPredict = reg.predict([[next_month[0]]])
+        
+        return round(saldoPredict[0], 2)
+        
+        
   
 class Summary(tk.Frame):
      
     def __init__(self, parent, controller):
          
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, bg="#a5a6f6")
         label = tk.Label(self, text ="Podsumowanie", font = ('Helvetica', 10, 'bold'))
         label.pack()
         label.place(x=10, y=0)
+        Summary_payment = []
         summary_payment_txt = tk.Text(self)
         summary_payment_txt.pack()
         summary_payment_txt.place(x=20,y=30, height=350, width=500)
-
-        if os.path.getsize("summaryMonth.dat")> 0:
-            summary_payment = pickle.load(open("summaryMonth.dat", "rb"))
-            for i in summary_payment:
-                summary_payment_txt.delete(1.0, "end")
-                summary_payment_txt.insert(1.0, i)
+        self.today = datetime.now().date()
+        
+        if self.today.day == 3:
+            if os.path.exists("payment.csv")==True:
+                with open('payment.csv', newline='', encoding='utf-8') as csvfile:
+                    payment = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                    
+                    i = 0
+                    for row in payment:
+                        i += float(row[1])
+                        
+                
+            
+            with open('summary.csv', 'a', newline='', encoding='utf-8') as csvfile:
+                summary = csv.writer(csvfile, delimiter=',', quotechar='|',
+                    quoting=csv.QUOTE_MINIMAL)
+                
+                summary.writerow([self.today, i])
+                         
+        if os.path.exists('summary.csv') == True:
+            with open('summary.csv', newline='', encoding='utf-8') as csvfile:
+                 summary = csv.reader(csvfile, delimiter=',', quotechar='|')
+                 
+                 for row in summary:
+                     i = row[0] + ": " + row[1]
+                     
+                     if i not in Summary_payment:
+                         Summary_payment.append(i)
+        
+        
+        for i in Summary_payment:
+            summary_payment_txt.insert(1.0, i + "\n")
+                     
+          
         mainBtn = tk.Button(self, text="Główna",
                                command = lambda:controller.show_frame(StartPage))        
         mainBtn.pack()
